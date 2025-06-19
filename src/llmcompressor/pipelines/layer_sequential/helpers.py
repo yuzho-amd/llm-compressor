@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Tuple
 import torch
 import tqdm
 from compressed_tensors.quantization import find_name_or_class_matches
+from compressed_tensors.utils import get_execution_device
 from torch.nn import Module
 from torch.utils.data.dataloader import DataLoader
 
@@ -61,6 +62,7 @@ def capture_first_layer_intermediates(
     :param mask_padding: zero out padding tokens if True. This affects modifiers such as
         GPTQ and SparseGPT
     """
+    model_device = get_execution_device(model)
     intermediates = IntermediatesCache.empty(len(dataloader), torch.device("cpu"))
     signature = inspect.signature(first_layer.forward)
 
@@ -68,7 +70,7 @@ def capture_first_layer_intermediates(
         desc = "Preparing intermediates cache"
         for batch_index, batch in enumerate(tqdm.tqdm(dataloader, desc=desc)):
             batch = apply_pad_mask_to_batch(batch) if mask_padding else batch
-            batch = tensors_to_device(batch, torch.device("cpu"))
+            batch = tensors_to_device(batch, model_device)
 
             try:
                 model(**batch)

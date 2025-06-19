@@ -49,7 +49,9 @@ import torch
 from transformers import AutoModelForCausalLM
 
 model_stub = "neuralmagic/Llama-2-7b-ultrachat200k"
-model = AutoModelForCausalLM.from_pretrained(model_stub, torch_dtype=torch.bfloat16)
+model = AutoModelForCausalLM.from_pretrained(
+    model_stub, torch_dtype=torch.bfloat16, device_map="auto"
+)
 
 dataset = "ultrachat-200k"
 splits = {"calibration": "train_gen[:5%]", "train": "train_gen"}

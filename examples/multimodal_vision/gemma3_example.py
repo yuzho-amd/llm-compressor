@@ -5,11 +5,12 @@ from transformers import AutoProcessor, Gemma3ForConditionalGeneration
 
 from llmcompressor import oneshot
 from llmcompressor.modifiers.quantization import GPTQModifier
-from llmcompressor.utils import dispatch_for_generation
 
 # Load model.
 model_id = "google/gemma-3-4b-it"
-model = Gemma3ForConditionalGeneration.from_pretrained(model_id, torch_dtype="auto")
+model = Gemma3ForConditionalGeneration.from_pretrained(
+    model_id, device_map="auto", torch_dtype="auto"
+)
 processor = AutoProcessor.from_pretrained(model_id, trust_remote_code=True)
 
 # Oneshot arguments
@@ -30,11 +31,7 @@ recipe = [
     GPTQModifier(
         targets="Linear",
         scheme="W4A16",
-        ignore=[
-            "lm_head",
-            "re:model\.vision_tower.*",
-            "re:model\.multi_modal_projector.*",
-        ],
+        ignore=["re:*.lm_head", "re:vision_tower.*", "re:multi_modal_projector.*"],
     ),
 ]
 
@@ -53,7 +50,6 @@ oneshot(
 
 # Confirm generations of the quantized model look sane.
 print("========== SAMPLE GENERATION ==============")
-dispatch_for_generation(model)
 messages = [
     {
         "role": "user",
@@ -74,6 +70,6 @@ print(processor.decode(output[0], skip_special_tokens=True))
 print("==========================================")
 
 # Save to disk compressed.
-SAVE_DIR = model_id.rstrip("/").split("/")[-1] + "-W4A16-G128"
+SAVE_DIR = model_id.split("/")[1] + "-W4A16-G128"
 model.save_pretrained(SAVE_DIR, save_compressed=True)
 processor.save_pretrained(SAVE_DIR)

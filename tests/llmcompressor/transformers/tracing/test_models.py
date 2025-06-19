@@ -20,7 +20,7 @@ from llmcompressor.utils.pytorch.module import get_no_split_params
 
 
 @pytest.mark.skipif(
-    (not os.getenv("HF_TOKEN")),
+    os.getenv("HF_TOKEN") is None,
     reason="Skipping tracing tests requiring gated model access",
 )
 @pytest.mark.parametrize(
@@ -136,6 +136,7 @@ def test_model_trace(model_id, model_class, targets, modality, backends):
         modality=modality,
         trust_remote_code=True,
         skip_weights=True,
+        device_map="cpu",
     )
 
     target_modules = get_target_modules(model, targets)

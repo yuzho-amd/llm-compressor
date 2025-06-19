@@ -4,7 +4,6 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, __version__
 
 from llmcompressor import oneshot
 from llmcompressor.modifiers.quantization import QuantizationModifier
-from llmcompressor.utils import dispatch_for_generation
 
 # NOTE: transformers 4.49.0 has an attribute error with DeepSeek.
 # Please consider either downgrading your transformers version to a
@@ -14,7 +13,7 @@ from llmcompressor.utils import dispatch_for_generation
 MODEL_ID = "deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct"
 
 model = AutoModelForCausalLM.from_pretrained(
-    MODEL_ID, torch_dtype="auto", trust_remote_code=True
+    MODEL_ID, device_map="auto", torch_dtype="auto", trust_remote_code=True
 )
 tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
 
@@ -80,7 +79,6 @@ oneshot(
 # Generation is broken for deepseek models when using the latest transformers package
 if Version(__version__) < Version("4.48"):
     print("========== SAMPLE GENERATION ==============")
-    dispatch_for_generation(model)
     SAMPLE_INPUT = ["I love quantization because"]
     tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
     inputs = tokenizer(SAMPLE_INPUT, return_tensors="pt", padding=True).to(model.device)
@@ -94,6 +92,6 @@ else:
     )
 
 # Save to disk in compressed-tensors format.
-SAVE_DIR = MODEL_ID.rstrip("/").split("/")[-1] + "-FP8"
+SAVE_DIR = MODEL_ID.split("/")[1] + "-FP8"
 model.save_pretrained(SAVE_DIR, save_compressed=True)
 tokenizer.save_pretrained(SAVE_DIR)

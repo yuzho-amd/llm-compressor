@@ -7,7 +7,9 @@ from llmcompressor.args import ModelArguments
 
 model_path = "neuralmagic/Llama-2-7b-pruned50-retrained"
 output_dir = "./output_trl_sft_test_7b_gsm8k_sft_data"
-model = AutoModelForCausalLM.from_pretrained(model_path, torch_dtype="auto")
+model = AutoModelForCausalLM.from_pretrained(
+    model_path, torch_dtype="auto", device_map="auto"
+)
 tokenizer = AutoTokenizer.from_pretrained(model_path)
 tokenizer.pad_token = tokenizer.eos_token
 
